@@ -2,60 +2,57 @@
 
 This folder contains demo GIFs and videos used in the README and VS Code Marketplace listing.
 
-## Required Demo Assets
+## Current Assets
 
-Upload the following files to this folder on the `main` branch so the README raw URLs resolve correctly.
+| File | Status | Size | Notes |
+|------|--------|------|-------|
+| `demo-hover-css.gif` | Ready | ~1.9 MB | Hover tooltip showing CSS definitions |
+| `demo-tailwind-decode.gif` | Needs compression | ~32 MB | Tailwind decoded CSS output — **too large, see below** |
+| `demo-click-open.gif` | Needs compression | ~24 MB | Click to open file at line — **borderline, see below** |
+| `demo-click-edit.gif` | **Missing** | — | Need a GIF showing the Edit button auto-selecting a rule |
 
-### 1. `demo-hover-css.gif` (recommended ~5 seconds)
-**What to record:**
-- Open any project with a React/HTML/Vue file
-- Hover your mouse over a `className` or `class` attribute value (e.g. `"flex p-4 bg-red-500"`)
-- Show the hover tooltip appearing with **CSS Definitions** listing files and line numbers
+## Size Warnings
 
-**Settings for best quality:**
-- VS Code zoom: `Ctrl + =` a few times to make text large
-- Window size: 1280×720 or smaller
-- Recording tool: ScreenToGif, LICEcap, or OBS Studio
-- Frame rate: 15-20 fps
-- Duration: 3–6 seconds (loop-friendly)
+Two of the GIFs are **too big** for comfortable distribution:
 
-### 2. `demo-tailwind-decode.gif` (recommended ~5 seconds)
-**What to record:**
-- Hover over a string of Tailwind classes
-- Show the **Tailwind Generated Styles** section appearing with decoded CSS like `display: flex;` and `padding: 16px;`
+- `demo-tailwind-decode.gif` (~32 MB) — GitHub warns on files >50 MB and blocks >100 MB, but this still bloats the `.vsix` package massively.
+- `demo-click-open.gif` (~24 MB) — Close to the GitHub warning threshold.
 
-### 3. `demo-click-open.gif` (recommended ~5 seconds)
-**What to record:**
-- Hover to show the tooltip
-- Click the **"Open styles.css:12"** link
-- Show the CSS file opening in a split/new tab and jumping to the correct line
+The `.vsix` extension package already includes `node_modules` (~54 MB). Adding 56 MB of GIFs makes the download **~110 MB+**, which is poor user experience.
 
-### 4. `demo-click-edit.gif` (recommended ~5 seconds)
-**What to record:**
-- Hover to show the tooltip
-- Click the **"Edit"** link next to a definition
-- Show the source file opening with the exact CSS rule highlighted/selected
+### Recommended fix
+
+**Re-record shorter GIFs** (3–5 seconds max, 15 fps, smaller window) or compress them with an online tool:
+
+- [ezgif.com/optimize](https://ezgif.com/optimize)
+- [iloveimg.com/compress-image](https://www.iloveimg.com/compress-image)
+
+Target: **each GIF under 2 MB** (the hover demo is already perfect at 1.9 MB).
 
 ---
 
-## Tips for Great Extension GIFs
+## Recording Tips for Replacement GIFs
 
 1. **Zoom in** — use `Ctrl + =` in VS Code so the code is readable on small screens
-2. **Use a clean theme** — a popular theme like Dracula, One Dark Pro, or GitHub Dark looks great in recordings
+2. **Use a clean theme** — Dracula, One Dark Pro, or GitHub Dark look great in recordings
 3. **Hide distractions** — close sidebar, panel, and minimap (`View → Appearance`)
 4. **Cursor highlight** — use a tool that shows click highlights (ScreenToGif has this)
-5. **File size** — keep each GIF under **2 MB** if possible. Use ScreenToGif's optimizer or compress with `gifsicle`
+5. **Keep it short** — 3 to 5 seconds is plenty; loop-friendly is best
+6. **Small window** — record at 1280×720 or smaller
 
-### Compressing GIFs (optional)
+---
+
+## Compressing GIFs Locally (if tools are installed)
 
 ```bash
-# Install gifsicle
+# Using gifsicle
 npm install -g gifsicle
+gifsicle --optimize=3 --colors=128 demo-tailwind-decode.gif -o demo-tailwind-decode-small.gif
 
-# Optimize
-gifsicle --optimize=3 --colors=128 demo-hover-css.gif -o demo-hover-css-small.gif
+# Using ImageMagick
+magick demo-tailwind-decode.gif -coalesce -layers Optimize demo-tailwind-decode-small.gif
 ```
 
 ---
 
-Once you've recorded and uploaded these GIFs to this folder, commit them to `main` and the README will automatically display them in the Marketplace!
+Once all 4 GIFs are under ~2 MB each, commit them to `main` and the Marketplace README will display them automatically.

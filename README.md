@@ -23,26 +23,18 @@ No more switching between files, no more "where did I define this style?", no mo
 ## Quick Demo
 
 ### Hover to reveal CSS definitions
-> 📹 *Record a 5-second GIF hovering over `className="flex p-4 bg-red-500"` in a React file and place it at:*  
-> `media/demo-hover-css.gif`
 
 ![Hover Demo](https://raw.githubusercontent.com/PrakashSewani/Class-Spy/main/media/demo-hover-css.gif)
 
 ### See decoded Tailwind utilities
-> 📹 *Record a 5-second GIF hovering over `class="w-full h-screen text-white"` and place it at:*  
-> `media/demo-tailwind-decode.gif`
 
 ![Tailwind Decode Demo](https://raw.githubusercontent.com/PrakashSewani/Class-Spy/main/media/demo-tailwind-decode.gif)
 
 ### Click to jump to the definition
-> 📹 *Record a 5-second GIF clicking "Open styles.css:12" and the file opening in a split tab:*  
-> `media/demo-click-open.gif`
 
 ![Click Open Demo](https://raw.githubusercontent.com/PrakashSewani/Class-Spy/main/media/demo-click-open.gif)
 
 ### Edit the rule in one click
-> 📹 *Record a 5-second GIF clicking "Edit" and the rule being auto-selected:*  
-> `media/demo-click-edit.gif`
 
 ![Click Edit Demo](https://raw.githubusercontent.com/PrakashSewani/Class-Spy/main/media/demo-click-edit.gif)
 
