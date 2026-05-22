@@ -2,7 +2,7 @@
 
 All notable changes to the "Class Spy" extension will be documented in this file.
 
-## [0.0.3] - 2026-05-23
+## [0.0.4] - 2026-05-23
 
 ### Added
 - **Template literal interpolation support** — hover now works inside JSX/TSX backtick strings with `${…}` interpolations. Static classes are extracted normally, and quoted string literals inside `${…}` blocks are found as a best-effort (e.g. `${isActive ? 'bg-red-500' : 'bg-blue-500'}`).
