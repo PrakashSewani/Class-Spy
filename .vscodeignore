@@ -4,7 +4,6 @@
 src/**
 out/test/**
 out/**/*.map
-node_modules/**
 .github/**
 .eslintrc.json
 .gitignore
