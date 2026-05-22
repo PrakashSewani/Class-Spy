@@ -3,11 +3,11 @@ import * as vscode from 'vscode';
 
 suite('Extension', () => {
     test('extension should be present', () => {
-        assert.ok(vscode.extensions.getExtension('YOUR_PUBLISHER_NAME.class-spy'));
+        assert.ok(vscode.extensions.getExtension('PrakashSewani.class-spy'));
     });
 
     test('should activate', async () => {
-        const ext = vscode.extensions.getExtension('YOUR_PUBLISHER_NAME.class-spy');
+        const ext = vscode.extensions.getExtension('PrakashSewani.class-spy');
         assert.ok(ext);
         await ext!.activate();
         assert.strictEqual(ext!.isActive, true);
