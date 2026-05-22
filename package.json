@@ -5,6 +5,10 @@
   "version": "0.0.1",
   "publisher": "PrakashSewani",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PrakashSewani/Class-Spy.git"
+  },
   "engines": {
     "vscode": "^1.74.0"
   },
