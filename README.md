@@ -2,8 +2,8 @@
 
 > **Spy on your CSS classes — hover to reveal definitions, decode Tailwind, and edit in place.**
 
-[![CI](https://github.com/PrakashSewani/class-spy-vscode/actions/workflows/ci.yml/badge.svg)](https://github.com/PrakashSewani/class-spy-vscode/actions/workflows/ci.yml)
-[![Build VSIX](https://github.com/PrakashSewani/class-spy-vscode/actions/workflows/build-vsix.yml/badge.svg)](https://github.com/PrakashSewani/class-spy-vscode/actions/workflows/build-vsix.yml)
+[![CI](https://github.com/PrakashSewani/Class-Spy/actions/workflows/ci.yml/badge.svg)](https://github.com/PrakashSewani/Class-Spy/actions/workflows/ci.yml)
+[![Build VSIX](https://github.com/PrakashSewani/Class-Spy/actions/workflows/build-vsix.yml/badge.svg)](https://github.com/PrakashSewani/Class-Spy/actions/workflows/build-vsix.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -29,7 +29,7 @@ Search for **"Class Spy"** in the Extensions panel (`Ctrl+Shift+X`) and click In
 
 ### From VSIX
 
-Download the latest `.vsix` from the [Releases](https://github.com/PrakashSewani/class-spy-vscode/releases) page, then run:
+Download the latest `.vsix` from the [Releases](https://github.com/PrakashSewani/Class-Spy/releases) page, then run:
 
 ```bash
 code --install-extension class-spy-0.0.1.vsix
