@@ -1,0 +1,14 @@
+.vscode/**
+!.vscode/launch.json
+!.vscode/tasks.json
+src/**
+out/test/**
+out/**/*.map
+node_modules/**
+.github/**
+.eslintrc.json
+.gitignore
+tsconfig.json
+*.vsix
+*.log
+**/*.ts
