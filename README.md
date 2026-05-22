@@ -2,8 +2,8 @@
 
 > **Spy on your CSS classes — hover to reveal definitions, decode Tailwind, and edit in place.**
 
-[![CI](https://github.com/YOUR_USERNAME/class-spy-vscode/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/class-spy-vscode/actions/workflows/ci.yml)
-[![Build VSIX](https://github.com/YOUR_USERNAME/class-spy-vscode/actions/workflows/build-vsix.yml/badge.svg)](https://github.com/YOUR_USERNAME/class-spy-vscode/actions/workflows/build-vsix.yml)
+[![CI](https://github.com/PrakashSewani/class-spy-vscode/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/class-spy-vscode/actions/workflows/ci.yml)
+[![Build VSIX](https://github.com/PrakashSewani/class-spy-vscode/actions/workflows/build-vsix.yml/badge.svg)](https://github.com/YOUR_USERNAME/class-spy-vscode/actions/workflows/build-vsix.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
