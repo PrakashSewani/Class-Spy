@@ -35,10 +35,6 @@ No more switching between files, no more "where did I define this style?", no mo
 
 ![Click Open Demo](https://raw.githubusercontent.com/PrakashSewani/Class-Spy/main/media/demo-click-open.gif)
 
-### Edit the rule in one click
-
-![Click Edit Demo](https://raw.githubusercontent.com/PrakashSewani/Class-Spy/main/media/demo-click-edit.gif)
-
 ---
 
 ## Features
