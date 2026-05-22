@@ -2,6 +2,18 @@
 
 All notable changes to the "Class Spy" extension will be documented in this file.
 
+## [0.0.3] - 2026-05-23
+
+### Added
+- **Template literal interpolation support** — hover now works inside JSX/TSX backtick strings with `${…}` interpolations. Static classes are extracted normally, and quoted string literals inside `${…}` blocks are found as a best-effort (e.g. `${isActive ? 'bg-red-500' : 'bg-blue-500'}`).
+- **JSX brace syntax detection** — `className={`…`}` is now recognised alongside regular quoted attributes.
+
+### Fixed
+- `h-screen` was returning `height: 100vw` instead of `height: 100vh`.
+- `inset-x-*` / `inset-y-*` returned `undefined`.
+- `gap-y-*` returned `column-gap` instead of `row-gap`.
+- Test suite runner was not discovering test files due to an incorrect glob path.
+
 ## [0.0.2] - 2026-05-23
 
 ### Fixed

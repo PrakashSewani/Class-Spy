@@ -4,6 +4,7 @@ import { decodeTailwindClass } from './tailwindDecoder';
 
 const CLASS_ATTRS = ['class', 'className', ':class', 'v-bind:class', '[class]', '[ngClass]', 'ng-class'];
 const attrRegex = new RegExp(`(?:^|\\s)(?:${CLASS_ATTRS.map(a => a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*=\\s*$`, 'i');
+const jsxAttrRegex = new RegExp(`(?:^|\\s)(?:${CLASS_ATTRS.map(a => a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*=\\s*\\{\\s*$`, 'i');
 // attrNameRegex kept for future attribute-name detection without quotes
 // const attrNameRegex = new RegExp(`\\b(?:${CLASS_ATTRS.map(a => a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`, 'i');
 
@@ -131,42 +132,67 @@ export class CssHoverProvider implements vscode.HoverProvider {
 
     private extractFromAttribute(text: string, offset: number, document: vscode.TextDocument): string[] | undefined {
         const quotes = ['"', "'", '`'];
-        let quoteChar: string | null = null;
-        let quotePos = -1;
+        const candidates: { char: string; pos: number }[] = [];
 
+        // Gather every quote to the left of the cursor so we can find the
+        // actual enclosing one (needed when template literals contain inner
+        // quoted strings like `${cond ? 'a' : 'b'}`).
         for (let i = offset - 1; i >= 0; i--) {
             if (quotes.includes(text[i])) {
-                quoteChar = text[i];
-                quotePos = i;
-                break;
+                candidates.push({ char: text[i], pos: i });
             }
         }
 
-        if (!quoteChar || quotePos === -1) {
+        if (candidates.length === 0) {
             return undefined;
         }
 
-        const quoteLine = document.lineAt(document.positionAt(quotePos));
-        const beforeInLine = quoteLine.text.substring(0, document.positionAt(quotePos).character);
+        for (const candidate of candidates) {
+            const quoteLine = document.lineAt(document.positionAt(candidate.pos));
+            const beforeInLine = quoteLine.text.substring(0, document.positionAt(candidate.pos).character);
 
-        if (!attrRegex.test(beforeInLine)) {
-            return undefined;
-        }
-
-        let endPos = -1;
-        for (let i = offset; i < text.length; i++) {
-            if (text[i] === quoteChar) {
-                endPos = i;
-                break;
+            if (!attrRegex.test(beforeInLine) && !(candidate.char === '`' && jsxAttrRegex.test(beforeInLine))) {
+                continue;
             }
+
+            // Find matching closing quote. For backticks we must skip ${…}
+            // interpolations so we don't land on an inner quoted character.
+            let endPos = -1;
+            if (candidate.char === '`') {
+                let braceDepth = 0;
+                let inInterpolation = false;
+                for (let i = candidate.pos + 1; i < text.length; i++) {
+                    if (!inInterpolation && text[i] === '$' && i + 1 < text.length && text[i + 1] === '{') {
+                        inInterpolation = true;
+                        braceDepth = 1;
+                        i++;
+                    } else if (inInterpolation) {
+                        if (text[i] === '{') { braceDepth++; }
+                        else if (text[i] === '}') { braceDepth--; }
+                        if (braceDepth === 0) { inInterpolation = false; }
+                    } else if (text[i] === '`') {
+                        endPos = i;
+                        break;
+                    }
+                }
+            } else {
+                for (let i = candidate.pos + 1; i < text.length; i++) {
+                    if (text[i] === candidate.char) {
+                        endPos = i;
+                        break;
+                    }
+                }
+            }
+
+            if (endPos === -1 || offset > endPos) {
+                continue;
+            }
+
+            const value = text.substring(candidate.pos + 1, endPos);
+            return this.extractClassesFromString(value, candidate.char);
         }
 
-        if (endPos === -1) {
-            return undefined;
-        }
-
-        const value = text.substring(quotePos + 1, endPos);
-        return this.splitClasses(value);
+        return undefined;
     }
 
     private extractFromUtilityFn(text: string, offset: number, _document: vscode.TextDocument): string[] | undefined {
@@ -189,7 +215,7 @@ export class CssHoverProvider implements vscode.HoverProvider {
 
         let parenDepth = 1;
         let fnEnd = -1;
-        for (let i = fnStart + fnName.length; i < text.length; i++) {
+        for (let i = fnStart + fnName.length + 1; i < text.length; i++) {
             if (text[i] === '(') parenDepth++;
             if (text[i] === ')') {
                 parenDepth--;
@@ -230,7 +256,7 @@ export class CssHoverProvider implements vscode.HoverProvider {
 
             if (relOffset >= currentPos && relOffset <= strEnd + 1) {
                 const value = fnBody.substring(strStart, strEnd);
-                return this.splitClasses(value);
+                return this.extractClassesFromString(value, q);
             }
 
             currentPos = strEnd + 1;
@@ -241,5 +267,59 @@ export class CssHoverProvider implements vscode.HoverProvider {
 
     private splitClasses(value: string): string[] {
         return value.split(/\s+/).filter(c => c.length > 0);
+    }
+
+    private extractClassesFromString(value: string, quoteChar: string): string[] {
+        if (quoteChar !== '`') {
+            return this.splitClasses(value);
+        }
+
+        // Template literal: skip ${...} interpolations, but extract quoted
+        // string literals found inside them as a best-effort.
+        const classes: string[] = [];
+        let currentSegment = '';
+        let braceDepth = 0;
+        let inInterpolation = false;
+
+        for (let i = 0; i < value.length; i++) {
+            const char = value[i];
+            if (!inInterpolation && char === '$' && i + 1 < value.length && value[i + 1] === '{') {
+                inInterpolation = true;
+                braceDepth = 1;
+                i++; // skip '{'
+                classes.push(...this.splitClasses(currentSegment));
+                currentSegment = '';
+            } else if (inInterpolation) {
+                if (char === '{') {
+                    braceDepth++;
+                } else if (char === '}') {
+                    braceDepth--;
+                }
+                if (braceDepth === 0) {
+                    // End of interpolation — best-effort quoted strings inside it
+                    classes.push(...this.extractStringLiteralsFromInterpolation(currentSegment));
+                    currentSegment = '';
+                    inInterpolation = false;
+                } else {
+                    currentSegment += char;
+                }
+            } else {
+                currentSegment += char;
+            }
+        }
+
+        classes.push(...this.splitClasses(currentSegment));
+        return classes;
+    }
+
+    private extractStringLiteralsFromInterpolation(text: string): string[] {
+        // Simple best-effort: find '...' and "..." inside the interpolation block.
+        const classes: string[] = [];
+        const regex = /['"`]([^'"`\s]+)['"`]/g;
+        let match: RegExpExecArray | null;
+        while ((match = regex.exec(text)) !== null) {
+            classes.push(...this.splitClasses(match[1]));
+        }
+        return classes;
     }
 }

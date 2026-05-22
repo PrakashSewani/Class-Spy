@@ -62,11 +62,11 @@ suite('hoverProvider', () => {
     });
 
     test('extracts classes from className attribute', async () => {
-        const content = '<div className="btn primary"></div>';
+        const content = '<div className="flex p-4"></div>';
         const doc = createMockDocument(content, 'html');
         const hover = await provider.provideHover(
             doc,
-            new vscode.Position(0, 20),
+            new vscode.Position(0, 22),
             new vscode.CancellationTokenSource().token
         );
 
@@ -134,7 +134,7 @@ suite('hoverProvider', () => {
     });
 
     test('extracts from clsx() utility function', async () => {
-        const content = 'clsx("btn primary")';
+        const content = 'clsx("flex p-4")';
         const doc = createMockDocument(content, 'typescript');
         const hover = await provider.provideHover(
             doc,
@@ -146,7 +146,7 @@ suite('hoverProvider', () => {
     });
 
     test('extracts from classNames() utility function', async () => {
-        const content = 'classNames("active disabled")';
+        const content = 'classNames("flex p-4")';
         const doc = createMockDocument(content, 'typescript');
         const hover = await provider.provideHover(
             doc,
@@ -216,6 +216,79 @@ suite('hoverProvider', () => {
         );
 
         assert.strictEqual(hover, undefined);
+    });
+
+    test('extracts static classes from JSX template literal with interpolation', async () => {
+        const content = '<div className={`${base}-btn flex p-4`}></div>';
+        const doc = createMockDocument(content, 'typescript');
+        const hover = await provider.provideHover(
+            doc,
+            new vscode.Position(0, 35), // cursor inside the template literal
+            new vscode.CancellationTokenSource().token
+        );
+
+        assert.ok(hover);
+        const contents = Array.isArray(hover!.contents) ? hover!.contents[0] : hover!.contents;
+        const markdown = contents as vscode.MarkdownString;
+        // Should mention the static classes that were found
+        assert.ok(markdown.value.includes('flex') || markdown.value.includes('padding'));
+    });
+
+    test('extracts quoted string literals from inside interpolation', async () => {
+        const content = 'cn(`${isActive ? \'bg-red-500\' : \'bg-blue-500\'} flex`)';
+        const doc = createMockDocument(content, 'typescript');
+        const hover = await provider.provideHover(
+            doc,
+            new vscode.Position(0, 35),
+            new vscode.CancellationTokenSource().token
+        );
+
+        assert.ok(hover);
+        const contents = Array.isArray(hover!.contents) ? hover!.contents[0] : hover!.contents;
+        const markdown = contents as vscode.MarkdownString;
+        assert.ok(markdown.value.includes('bg-red-500') || markdown.value.includes('bg-blue-500') || markdown.value.includes('Tailwind'));
+    });
+
+    test('returns undefined for purely dynamic template literal', async () => {
+        const content = '<div className={`${dynamic}`}></div>';
+        const doc = createMockDocument(content, 'typescript');
+        const hover = await provider.provideHover(
+            doc,
+            new vscode.Position(0, 20),
+            new vscode.CancellationTokenSource().token
+        );
+
+        assert.strictEqual(hover, undefined);
+    });
+
+    test('handles nested braces inside template literal interpolation', async () => {
+        const content = '<div className={`${condition ? (isDark ? \'dark\' : \'light\') : \'\'} flex`}></div>';
+        const doc = createMockDocument(content, 'typescript');
+        const hover = await provider.provideHover(
+            doc,
+            new vscode.Position(0, 50),
+            new vscode.CancellationTokenSource().token
+        );
+
+        assert.ok(hover);
+        const contents = Array.isArray(hover!.contents) ? hover!.contents[0] : hover!.contents;
+        const markdown = contents as vscode.MarkdownString;
+        assert.ok(markdown.value.includes('flex'));
+    });
+
+    test('handles backtick string without interpolation like regular quotes', async () => {
+        const content = '<div className={`flex p-4`}></div>';
+        const doc = createMockDocument(content, 'typescript');
+        const hover = await provider.provideHover(
+            doc,
+            new vscode.Position(0, 20),
+            new vscode.CancellationTokenSource().token
+        );
+
+        assert.ok(hover);
+        const contents = Array.isArray(hover!.contents) ? hover!.contents[0] : hover!.contents;
+        const markdown = contents as vscode.MarkdownString;
+        assert.ok(markdown.value.includes('flex') || markdown.value.includes('padding'));
     });
 });
 

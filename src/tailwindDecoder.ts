@@ -333,18 +333,20 @@ export function decodeTailwindClass(cls: string): string | undefined {
 
     // Top / Right / Bottom / Left / Inset
     const INSET_PROPS: Record<string, string> = { 'top': 'top', 'right': 'right', 'bottom': 'bottom', 'left': 'left', 'inset': 'inset', 'inset-x': 'left,right', 'inset-y': 'top,bottom' };
-    if (INSET_PROPS[first] !== undefined) {
-        const val = getSize(parts.slice(1).join('-'));
+    const insetKey = (first === 'inset' && (parts[1] === 'x' || parts[1] === 'y')) ? `${first}-${parts[1]}` : first;
+    if (INSET_PROPS[insetKey] !== undefined) {
+        const sliceIndex = insetKey.includes('-') ? 2 : 1;
+        const val = getSize(parts.slice(sliceIndex).join('-'));
         if (val) {
-            const props = INSET_PROPS[first].split(',');
+            const props = INSET_PROPS[insetKey].split(',');
             return props.map(p => `${p}: ${val};`).join('\n');
         }
-        if (parts[1] === 'auto') {
-            const props = INSET_PROPS[first].split(',');
+        if (parts[sliceIndex] === 'auto') {
+            const props = INSET_PROPS[insetKey].split(',');
             return props.map(p => `${p}: auto;`).join('\n');
         }
-        if (parts[1] === 'full') {
-            const props = INSET_PROPS[first].split(',');
+        if (parts[sliceIndex] === 'full') {
+            const props = INSET_PROPS[insetKey].split(',');
             return props.map(p => `${p}: 100%;`).join('\n');
         }
     }
@@ -533,10 +535,10 @@ export function decodeTailwindClass(cls: string): string | undefined {
     }
     // Height
     if (first === 'h') {
-        const val = getSize(parts.slice(1).join('-'));
-        if (val) return `height: ${val};`;
         if (parts[1] === 'auto') return 'height: auto;';
         if (parts[1] === 'screen') return 'height: 100vh;';
+        const val = getSize(parts.slice(1).join('-'));
+        if (val) return `height: ${val};`;
         if (parts[1] === 'min') return 'height: min-content;';
         if (parts[1] === 'max') return 'height: max-content;';
         if (parts[1] === 'fit') return 'height: fit-content;';
@@ -638,11 +640,7 @@ export function decodeTailwindClass(cls: string): string | undefined {
         const val = getSpacing(parts.slice(1).join('-'));
         if (val) return `gap: ${val};`;
     }
-    if (first === 'gap' && (parts[1] === 'x' || parts[1] === 'y')) {
-        const val = getSpacing(parts.slice(2).join('-'));
-        if (val) return `column-gap: ${val};`;
-    }
-    // Actually gap-x and gap-y
+    // Gap-x and gap-y
     if (first === 'gap' && parts[1] === 'x') {
         const val = getSpacing(parts.slice(2).join('-'));
         if (val) return `column-gap: ${val};`;

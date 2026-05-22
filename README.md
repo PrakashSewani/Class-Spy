@@ -88,7 +88,21 @@ Click **Open `styles.css:12`** to jump to the rule in a new editor tab.
 
 Click **Edit** next to any definition. The source file opens in a split tab with the exact rule highlighted. Modify it and save with `Ctrl+S`.
 
-### 4. Utility function support
+### 4. Template literal & dynamic class support
+
+Works inside JSX/TSX template literals and interpolations:
+
+```tsx
+// Template literals with dynamic prefixes
+<div className={`${base}-btn flex p-4`}>
+
+// Ternary expressions — still decodes quoted strings
+<div className={`${isActive ? 'bg-red-500' : 'bg-blue-500'} flex`}>
+```
+
+Static classes are always shown. Quoted string literals inside `${…}` blocks are extracted as a best-effort, so you still see CSS definitions and Tailwind decoding for conditional classes.
+
+### 5. Utility function support
 
 Works inside `cn()`, `clsx()`, and `classNames()` calls:
 
