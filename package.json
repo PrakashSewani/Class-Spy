@@ -3,7 +3,7 @@
   "displayName": "Class Spy",
   "description": "Instantly reveal CSS definitions and decoded Tailwind styles by hovering over class attributes in HTML, React, Vue, Svelte, Astro, and Angular.",
   "icon": "images/icon.png",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "PrakashSewani",
   "license": "MIT",
   "repository": {
