@@ -5,6 +5,7 @@
 [![CI](https://github.com/PrakashSewani/Class-Spy/actions/workflows/ci.yml/badge.svg)](https://github.com/PrakashSewani/Class-Spy/actions/workflows/ci.yml)
 [![Build VSIX](https://github.com/PrakashSewani/Class-Spy/actions/workflows/build-vsix.yml/badge.svg)](https://github.com/PrakashSewani/Class-Spy/actions/workflows/build-vsix.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-red)](https://github.com/sponsors/PrakashSewani)
 
 ---
 
@@ -190,6 +191,16 @@ Contributions are welcome! Please open an issue or pull request on GitHub.
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+---
+
+## Support
+
+If Class Spy saves you time and you want to keep it growing, consider supporting the project:
+
+[![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-red?style=for-the-badge)](https://github.com/sponsors/PrakashSewani)
+
+Your support helps fund new features, better Tailwind coverage, and more framework support.
 
 ---
 

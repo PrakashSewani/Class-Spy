@@ -10,6 +10,9 @@
     "type": "git",
     "url": "https://github.com/PrakashSewani/Class-Spy.git"
   },
+  "sponsor": {
+    "url": "https://github.com/sponsors/PrakashSewani"
+  },
   "engines": {
     "vscode": "^1.74.0"
   },
