@@ -1,10 +1,50 @@
 # Class Spy
 
-> **Spy on your CSS classes — hover to reveal definitions, decode Tailwind, and edit in place.**
+> **Stop guessing what your CSS classes do — hover and see everything instantly.**
 
 [![CI](https://github.com/PrakashSewani/Class-Spy/actions/workflows/ci.yml/badge.svg)](https://github.com/PrakashSewani/Class-Spy/actions/workflows/ci.yml)
 [![Build VSIX](https://github.com/PrakashSewani/Class-Spy/actions/workflows/build-vsix.yml/badge.svg)](https://github.com/PrakashSewani/Class-Spy/actions/workflows/build-vsix.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+---
+
+## What does it do?
+
+**Class Spy** turns your `class` and `className` attributes into interactive CSS explorers. Hover over any class string in your code and instantly see:
+
+1. **Where the CSS is defined** — file name, line number, and the full rule
+2. **What Tailwind generates** — decoded utility classes shown as plain CSS
+3. **One-click navigation** — jump directly to the source file to edit
+
+No more switching between files, no more "where did I define this style?", no more memorizing Tailwind scales.
+
+---
+
+## Quick Demo
+
+### Hover to reveal CSS definitions
+> 📹 *Record a 5-second GIF hovering over `className="flex p-4 bg-red-500"` in a React file and place it at:*  
+> `media/demo-hover-css.gif`
+
+![Hover Demo](https://raw.githubusercontent.com/PrakashSewani/Class-Spy/main/media/demo-hover-css.gif)
+
+### See decoded Tailwind utilities
+> 📹 *Record a 5-second GIF hovering over `class="w-full h-screen text-white"` and place it at:*  
+> `media/demo-tailwind-decode.gif`
+
+![Tailwind Decode Demo](https://raw.githubusercontent.com/PrakashSewani/Class-Spy/main/media/demo-tailwind-decode.gif)
+
+### Click to jump to the definition
+> 📹 *Record a 5-second GIF clicking "Open styles.css:12" and the file opening in a split tab:*  
+> `media/demo-click-open.gif`
+
+![Click Open Demo](https://raw.githubusercontent.com/PrakashSewani/Class-Spy/main/media/demo-click-open.gif)
+
+### Edit the rule in one click
+> 📹 *Record a 5-second GIF clicking "Edit" and the rule being auto-selected:*  
+> `media/demo-click-edit.gif`
+
+![Click Edit Demo](https://raw.githubusercontent.com/PrakashSewani/Class-Spy/main/media/demo-click-edit.gif)
 
 ---
 
@@ -25,14 +65,14 @@
 
 ### From VS Code Marketplace
 
-Search for **"Class Spy"** in the Extensions panel (`Ctrl+Shift+X`) and click Install.
+Search for **"Class Spy"** in the Extensions panel (`Ctrl+Shift+X` / `Cmd+Shift+X`) and click **Install**.
 
 ### From VSIX
 
 Download the latest `.vsix` from the [Releases](https://github.com/PrakashSewani/Class-Spy/releases) page, then run:
 
 ```bash
-code --install-extension class-spy-0.0.1.vsix
+code --install-extension class-spy-0.0.2.vsix
 ```
 
 ---

@@ -2,6 +2,14 @@
 
 All notable changes to the "Class Spy" extension will be documented in this file.
 
+## [0.0.2] - 2026-05-23
+
+### Fixed
+- **Extension failing silently after Marketplace install** — removed `node_modules/**` from `.vscodeignore` so runtime dependencies (`postcss`, `postcss-scss`, `postcss-less`, `postcss-sass`) are bundled in the `.vsix`. Previously the extension could not activate because these packages were missing.
+
+### Changed
+- Improved README with demo video placeholders and clearer "What does it do?" section for Marketplace discoverability.
+
 ## [0.0.1] - 2026-05-23
 
 ### Added
