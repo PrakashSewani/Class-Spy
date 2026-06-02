@@ -43,7 +43,11 @@
     "onLanguage:typescriptreact",
     "onLanguage:vue",
     "onLanguage:svelte",
-    "onLanguage:astro"
+    "onLanguage:astro",
+    "onLanguage:css",
+    "onLanguage:scss",
+    "onLanguage:sass",
+    "onLanguage:less"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -60,6 +64,10 @@
         "command": "classSpy.refreshIndex",
         "title": "Class Spy: Refresh CSS Class Index",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "classSpy.showUsages",
+        "title": "Class Spy: Show All Usages"
       }
     ]
   },

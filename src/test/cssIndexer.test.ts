@@ -1,5 +1,36 @@
 import * as assert from 'assert';
+import * as vscode from 'vscode';
 import { CssIndexer } from '../cssIndexer';
+
+function createMockDocForUsages(content: string, uri: string): any {
+    const lines = content.split('\n');
+    return {
+        getText: () => content,
+        uri: { toString: () => uri },
+        offsetAt: (pos: any) => {
+            let offset = 0;
+            for (let i = 0; i < pos.line; i++) {
+                offset += lines[i].length + 1;
+            }
+            return offset + pos.character;
+        },
+        lineAt: (pos: any) => {
+            const line = typeof pos === 'number' ? pos : pos.line;
+            return { text: lines[line] || '' } as any;
+        },
+        positionAt: (offset: number) => {
+            let currentOffset = 0;
+            for (let i = 0; i < lines.length; i++) {
+                const lineLength = lines[i].length + 1;
+                if (currentOffset + lineLength > offset) {
+                    return new vscode.Position(i, offset - currentOffset);
+                }
+                currentOffset += lineLength;
+            }
+            return new vscode.Position(lines.length - 1, 0);
+        }
+    } as any;
+}
 
 suite('cssIndexer', () => {
     let indexer: CssIndexer;
@@ -7,6 +38,7 @@ suite('cssIndexer', () => {
     setup(() => {
         indexer = new CssIndexer();
         indexer['index'].clear();
+        indexer['usageIndex'].clear();
     });
 
     test('indexes simple class selectors', () => {
@@ -134,5 +166,116 @@ suite('cssIndexer', () => {
         assert.strictEqual(defs[0].line, 10);
         assert.strictEqual(defs[0].startLine, 10);
     });
-});
 
+    // --- Usage indexing tests ---
+
+    test('indexes class usages from HTML class attribute', () => {
+        const html = '<div class="flex p-4"></div>';
+        const doc = createMockDocForUsages(html, 'file:///test.html');
+        indexer['scanUsages'](doc);
+
+        const flexUsages = indexer.getUsages('flex');
+        const p4Usages = indexer.getUsages('p-4');
+
+        assert.strictEqual(flexUsages.length, 1);
+        assert.strictEqual(p4Usages.length, 1);
+        assert.strictEqual(flexUsages[0].uri, 'file:///test.html');
+        assert.strictEqual(flexUsages[0].line, 0);
+        assert.strictEqual(flexUsages[0].className, 'flex');
+    });
+
+    test('indexes class usages from JSX className', () => {
+        const jsx = '<div className="flex p-4"></div>';
+        const doc = createMockDocForUsages(jsx, 'file:///test.jsx');
+        indexer['scanUsages'](doc);
+
+        const flexUsages = indexer.getUsages('flex');
+        assert.strictEqual(flexUsages.length, 1);
+        assert.strictEqual(flexUsages[0].uri, 'file:///test.jsx');
+    });
+
+    test('indexes class usages from cn() utility function', () => {
+        const tsx = 'cn("flex p-4")';
+        const doc = createMockDocForUsages(tsx, 'file:///test.tsx');
+        indexer['scanUsages'](doc);
+
+        const flexUsages = indexer.getUsages('flex');
+        const p4Usages = indexer.getUsages('p-4');
+        assert.strictEqual(flexUsages.length, 1);
+        assert.strictEqual(p4Usages.length, 1);
+    });
+
+    test('ignores classes inside <style> blocks', () => {
+        const vue = '<template><div class="flex"></div></template>\n<style>.flex { display: flex; }</style>';
+        const doc = createMockDocForUsages(vue, 'file:///test.vue');
+        indexer['scanUsages'](doc);
+
+        const flexUsages = indexer.getUsages('flex');
+        // Should only find the usage in the template, not the definition in the style block
+        assert.strictEqual(flexUsages.length, 1);
+        assert.ok(flexUsages[0].context.includes('class='));
+    });
+
+    test('deduplicates duplicate usages', () => {
+        const html = '<div class="flex flex"></div>';
+        const doc = createMockDocForUsages(html, 'file:///test.html');
+        indexer['scanUsages'](doc);
+
+        const flexUsages = indexer.getUsages('flex');
+        assert.strictEqual(flexUsages.length, 1);
+    });
+
+    test('indexes usages from template literals', () => {
+        const tsx = '<div className={`flex p-4`}></div>';
+        const doc = createMockDocForUsages(tsx, 'file:///test.tsx');
+        indexer['scanUsages'](doc);
+
+        const flexUsages = indexer.getUsages('flex');
+        assert.strictEqual(flexUsages.length, 1);
+    });
+
+    test('indexes usages from clsx() and classNames()', () => {
+        const tsx = 'clsx("flex", classNames("p-4"))';
+        const doc = createMockDocForUsages(tsx, 'file:///test.tsx');
+        indexer['scanUsages'](doc);
+
+        const flexUsages = indexer.getUsages('flex');
+        const p4Usages = indexer.getUsages('p-4');
+        assert.strictEqual(flexUsages.length, 1);
+        assert.strictEqual(p4Usages.length, 1);
+    });
+
+    test('removes usage entries when file is removed', () => {
+        const html = '<div class="flex"></div>';
+        const doc = createMockDocForUsages(html, 'file:///test.html');
+        indexer['scanUsages'](doc);
+
+        assert.strictEqual(indexer.getUsages('flex').length, 1);
+        indexer['removeFile']({ toString: () => 'file:///test.html' } as any);
+        assert.deepStrictEqual(indexer.getUsages('flex'), []);
+    });
+
+    test('returns empty array for unknown class usage', () => {
+        assert.deepStrictEqual(indexer.getUsages('nonexistent'), []);
+    });
+
+    test('indexes usages from Vue :class binding', () => {
+        const vue = '<div :class="flex p-4"></div>';
+        const doc = createMockDocForUsages(vue, 'file:///test.vue');
+        indexer['scanUsages'](doc);
+
+        const flexUsages = indexer.getUsages('flex');
+        const p4Usages = indexer.getUsages('p-4');
+        assert.strictEqual(flexUsages.length, 1);
+        assert.strictEqual(p4Usages.length, 1);
+    });
+
+    test('indexes usages from Angular ngClass', () => {
+        const html = '<div [ngClass]="flex p-4"></div>';
+        const doc = createMockDocForUsages(html, 'file:///test.html');
+        indexer['scanUsages'](doc);
+
+        const flexUsages = indexer.getUsages('flex');
+        assert.strictEqual(flexUsages.length, 1);
+    });
+});

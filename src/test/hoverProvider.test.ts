@@ -3,13 +3,17 @@ import * as vscode from 'vscode';
 import { CssHoverProvider } from '../hoverProvider';
 import { CssIndexer } from '../cssIndexer';
 
-function createMockDocument(content: string, languageId = 'html'): vscode.TextDocument {
+function createMockDocument(content: string, languageId = 'html', uri = 'file:///test.html'): vscode.TextDocument {
+    const lines = content.split('\n');
     return {
-        getText: () => content,
+        getText: (range?: vscode.Range) => {
+            if (!range) return content;
+            const line = lines[range.start.line];
+            return line.substring(range.start.character, range.end.character);
+        },
         languageId,
-        uri: { toString: () => 'file:///test.html' } as any,
+        uri: { toString: () => uri } as any,
         offsetAt: (pos: vscode.Position) => {
-            const lines = content.split('\n');
             let offset = 0;
             for (let i = 0; i < pos.line; i++) {
                 offset += lines[i].length + 1;
@@ -18,11 +22,10 @@ function createMockDocument(content: string, languageId = 'html'): vscode.TextDo
         },
         lineAt: (pos: vscode.Position | number) => {
             const line = typeof pos === 'number' ? pos : pos.line;
-            const text = content.split('\n')[line] || '';
+            const text = lines[line] || '';
             return { text } as any;
         },
         positionAt: (offset: number) => {
-            const lines = content.split('\n');
             let currentOffset = 0;
             for (let i = 0; i < lines.length; i++) {
                 const lineLength = lines[i].length + 1;
@@ -33,7 +36,21 @@ function createMockDocument(content: string, languageId = 'html'): vscode.TextDo
             }
             return new vscode.Position(lines.length - 1, 0);
         },
-    } as vscode.TextDocument;
+        getWordRangeAtPosition: (pos: vscode.Position, regex?: RegExp) => {
+            const line = lines[pos.line] || '';
+            const pattern = regex || /[a-zA-Z0-9_-]+/g;
+            let match: RegExpExecArray | null;
+            while ((match = pattern.exec(line)) !== null) {
+                if (pos.character >= match.index && pos.character <= match.index + match[0].length) {
+                    return new vscode.Range(
+                        new vscode.Position(pos.line, match.index),
+                        new vscode.Position(pos.line, match.index + match[0].length)
+                    );
+                }
+            }
+            return undefined;
+        }
+    } as any;
 }
 
 suite('hoverProvider', () => {
@@ -290,5 +307,84 @@ suite('hoverProvider', () => {
         const markdown = contents as vscode.MarkdownString;
         assert.ok(markdown.value.includes('flex') || markdown.value.includes('padding'));
     });
-});
 
+    // --- CSS hover tests ---
+
+    test('returns usages when hovering over CSS class selector', async () => {
+        const html = '<div class="flex p-4"></div>';
+        const htmlDoc = createMockDocument(html, 'html', 'file:///test.html');
+        indexer['scanUsages'](htmlDoc);
+
+        const css = '.flex { display: flex; }';
+        const cssDoc = createMockDocument(css, 'css', 'file:///test.css');
+        const hover = await provider.provideHover(
+            cssDoc,
+            new vscode.Position(0, 1), // cursor on 'flex'
+            new vscode.CancellationTokenSource().token
+        );
+
+        assert.ok(hover);
+        const contents = Array.isArray(hover!.contents) ? hover!.contents[0] : hover!.contents;
+        const markdown = contents as vscode.MarkdownString;
+        assert.ok(markdown.value.includes('Usage'));
+        assert.ok(markdown.value.includes('flex'));
+        assert.ok(markdown.value.includes('test.html'));
+    });
+
+    test('returns undefined when hovering over non-class CSS token', async () => {
+        const css = 'div { display: flex; }';
+        const cssDoc = createMockDocument(css, 'css', 'file:///test.css');
+        const hover = await provider.provideHover(
+            cssDoc,
+            new vscode.Position(0, 0), // cursor on 'div'
+            new vscode.CancellationTokenSource().token
+        );
+
+        assert.strictEqual(hover, undefined);
+    });
+
+    test('returns undefined when hovering over CSS class with no usages', async () => {
+        const css = '.unused { color: red; }';
+        const cssDoc = createMockDocument(css, 'css', 'file:///test.css');
+        const hover = await provider.provideHover(
+            cssDoc,
+            new vscode.Position(0, 1), // cursor on 'unused'
+            new vscode.CancellationTokenSource().token
+        );
+
+        assert.strictEqual(hover, undefined);
+    });
+
+    test('shows "Show all" link when usages exceed 10', async () => {
+        // Create 15 usages of the same class
+        const html = Array.from({ length: 15 }, () => '<div class="overflow-class"></div>').join('\n');
+        const htmlDoc = createMockDocument(html, 'html', 'file:///test.html');
+        indexer['scanUsages'](htmlDoc);
+
+        const css = '.overflow-class { color: red; }';
+        const cssDoc = createMockDocument(css, 'css', 'file:///test.css');
+        const hover = await provider.provideHover(
+            cssDoc,
+            new vscode.Position(0, 1),
+            new vscode.CancellationTokenSource().token
+        );
+
+        assert.ok(hover);
+        const contents = Array.isArray(hover!.contents) ? hover!.contents[0] : hover!.contents;
+        const markdown = contents as vscode.MarkdownString;
+        assert.ok(markdown.value.includes('Show all'));
+        assert.ok(markdown.value.includes('15'));
+    });
+
+    test('returns undefined for CSS pseudo-class hover', async () => {
+        const css = '.btn:hover { color: red; }';
+        const cssDoc = createMockDocument(css, 'css', 'file:///test.css');
+        const hover = await provider.provideHover(
+            cssDoc,
+            new vscode.Position(0, 5), // cursor on 'hover'
+            new vscode.CancellationTokenSource().token
+        );
+
+        assert.strictEqual(hover, undefined);
+    });
+});

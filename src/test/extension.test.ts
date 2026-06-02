@@ -18,5 +18,6 @@ suite('Extension', () => {
         assert.ok(commands.includes('classSpy.openFile'));
         assert.ok(commands.includes('classSpy.editStyle'));
         assert.ok(commands.includes('classSpy.refreshIndex'));
+        assert.ok(commands.includes('classSpy.showUsages'));
     });
 });

@@ -15,6 +15,10 @@ export function activate(context: vscode.ExtensionContext) {
         { scheme: 'file', language: 'vue' },
         { scheme: 'file', language: 'svelte' },
         { scheme: 'file', language: 'astro' },
+        { scheme: 'file', language: 'css' },
+        { scheme: 'file', language: 'scss' },
+        { scheme: 'file', language: 'sass' },
+        { scheme: 'file', language: 'less' },
         { scheme: 'untitled', language: 'html' },
         { scheme: 'untitled', language: 'javascript' },
         { scheme: 'untitled', language: 'typescript' },
@@ -23,6 +27,10 @@ export function activate(context: vscode.ExtensionContext) {
         { scheme: 'untitled', language: 'vue' },
         { scheme: 'untitled', language: 'svelte' },
         { scheme: 'untitled', language: 'astro' },
+        { scheme: 'untitled', language: 'css' },
+        { scheme: 'untitled', language: 'scss' },
+        { scheme: 'untitled', language: 'sass' },
+        { scheme: 'untitled', language: 'less' },
     ];
 
     context.subscriptions.push(
@@ -80,6 +88,45 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.commands.registerCommand('classSpy.refreshIndex', () => {
             indexer.refresh();
+        })
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('classSpy.showUsages', async (className: string) => {
+            const usages = indexer.getUsages(className);
+            if (usages.length === 0) {
+                vscode.window.showInformationMessage(`No usages found for .${className}`);
+                return;
+            }
+
+            const items = usages.map(u => {
+                const fileName = vscode.workspace.asRelativePath(vscode.Uri.parse(u.uri));
+                return {
+                    label: `${fileName}:${u.line + 1}`,
+                    description: u.context,
+                    uri: u.uri,
+                    line: u.line
+                };
+            });
+
+            const selected = await vscode.window.showQuickPick(items, {
+                placeHolder: `Usages of .${className} (${usages.length} found)`
+            });
+
+            if (selected) {
+                const docUri = vscode.Uri.parse(selected.uri);
+                vscode.window.showTextDocument(docUri, {
+                    selection: new vscode.Range(new vscode.Position(selected.line, 0), new vscode.Position(selected.line, 0)),
+                    viewColumn: vscode.ViewColumn.Beside,
+                    preview: false
+                }).then(editor => {
+                    const pos = new vscode.Position(selected.line, 0);
+                    editor.revealRange(
+                        new vscode.Range(pos, pos),
+                        vscode.TextEditorRevealType.InCenterIfOutsideViewport
+                    );
+                });
+            }
         })
     );
 

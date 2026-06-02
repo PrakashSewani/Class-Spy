@@ -3,10 +3,10 @@ import { CssIndexer, CssDefinition } from './cssIndexer';
 import { decodeTailwindClass } from './tailwindDecoder';
 
 const CLASS_ATTRS = ['class', 'className', ':class', 'v-bind:class', '[class]', '[ngClass]', 'ng-class'];
-const attrRegex = new RegExp(`(?:^|\\s)(?:${CLASS_ATTRS.map(a => a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*=\\s*$`, 'i');
-const jsxAttrRegex = new RegExp(`(?:^|\\s)(?:${CLASS_ATTRS.map(a => a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*=\\s*\\{\\s*$`, 'i');
+const attrRegex = new RegExp(`(?:^|\\s)(?:${CLASS_ATTRS.map(a => a.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')).join('|')})\\s*=\\s*$`, 'i');
+const jsxAttrRegex = new RegExp(`(?:^|\\s)(?:${CLASS_ATTRS.map(a => a.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')).join('|')})\\s*=\\s*\\{\\s*$`, 'i');
 // attrNameRegex kept for future attribute-name detection without quotes
-// const attrNameRegex = new RegExp(`\\b(?:${CLASS_ATTRS.map(a => a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`, 'i');
+// const attrNameRegex = new RegExp(`\\b(?:${CLASS_ATTRS.map(a => a.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')).join('|')})\\b`, 'i');
 
 const UTILITY_FN_NAMES = ['cn', 'clsx', 'classNames'];
 
@@ -14,6 +14,11 @@ export class CssHoverProvider implements vscode.HoverProvider {
     constructor(private indexer: CssIndexer) {}
 
     provideHover(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
+        // CSS/SCSS/SASS/LESS hover: reverse lookup
+        if (['css', 'scss', 'sass', 'less'].includes(document.languageId)) {
+            return this.provideCssHover(document, position);
+        }
+
         const classList = this.extractClassList(document, position);
         if (!classList || classList.length === 0) {
             return undefined;
@@ -106,6 +111,77 @@ export class CssHoverProvider implements vscode.HoverProvider {
 
         if (!hasContent) {
             return undefined;
+        }
+
+        return new vscode.Hover(contents);
+    }
+
+    private provideCssHover(document: vscode.TextDocument, position: vscode.Position): vscode.ProviderResult<vscode.Hover> {
+        const wordRange = document.getWordRangeAtPosition(position, /[a-zA-Z0-9_-]+/);
+        if (!wordRange) {
+            return undefined;
+        }
+
+        const wordStart = wordRange.start.character;
+        if (wordStart === 0) {
+            return undefined;
+        }
+
+        const line = document.lineAt(position.line).text;
+        const charBefore = line[wordStart - 1];
+        if (charBefore !== '.') {
+            return undefined;
+        }
+
+        const className = document.getText(wordRange);
+        const usages = this.indexer.getUsages(className);
+        if (usages.length === 0) {
+            return undefined;
+        }
+
+        const contents = new vscode.MarkdownString();
+        contents.isTrusted = true;
+        contents.supportHtml = false;
+
+        contents.appendMarkdown(`## CSS Class Usage  \n`);
+        contents.appendMarkdown(`**Class:** \`.${className}\`  \n\n`);
+        contents.appendMarkdown(`---  \n\n`);
+
+        const currentUri = document.uri.toString();
+        const sorted = usages.sort((a, b) => {
+            const aSame = a.uri === currentUri ? -1 : 0;
+            const bSame = b.uri === currentUri ? -1 : 0;
+            if (aSame !== bSame) return aSame - bSame;
+            return a.uri.localeCompare(b.uri);
+        });
+
+        const limit = 10;
+        const display = sorted.slice(0, limit);
+
+        contents.appendMarkdown(`### Usages (${usages.length} found)  \n\n`);
+
+        for (let i = 0; i < display.length; i++) {
+            const u = display[i];
+            const fileName = vscode.workspace.asRelativePath(vscode.Uri.parse(u.uri));
+            const isCurrent = u.uri === currentUri;
+            const locationBadge = isCurrent ? 'current file' : fileName;
+
+            const openArgs = encodeURIComponent(JSON.stringify([u.uri, u.line]));
+            const openLink = `[Open ${fileName}:${u.line + 1}](command:classSpy.openFile?${openArgs})`;
+
+            if (i > 0) {
+                contents.appendMarkdown(`\n\n---\n\n`);
+            }
+
+            contents.appendMarkdown(`*${locationBadge}*  \n`);
+            contents.appendCodeblock(u.context, document.languageId);
+            contents.appendMarkdown(`\n${openLink}`);
+        }
+
+        if (usages.length > limit) {
+            const showArgs = encodeURIComponent(JSON.stringify([className]));
+            const showLink = `[Show all ${usages.length} usages](command:classSpy.showUsages?${showArgs})`;
+            contents.appendMarkdown(`\n\n---\n\n${showLink}`);
         }
 
         return new vscode.Hover(contents);
