@@ -2,6 +2,18 @@
 
 All notable changes to the "Class Spy" extension will be documented in this file.
 
+## [0.0.5] - 2026-06-02
+
+### Added
+- **Reverse class lookup (CSS hover)** — hover over any class selector (`.foo`) in `.css`, `.scss`, `.sass`, or `.less` files to see every template/HTML/JSX/Vue/Svelte/Astro/Angular usage across the workspace.
+- **"Show all usages" quick pick** — when more than 10 usages are found, a command link opens a `QuickPick` to browse and jump to any usage.
+- **Usage indexing** — the indexer now scans all template files (`html`, `vue`, `svelte`, `astro`, `jsx`, `tsx`) for `class`, `className`, `:class`, `[ngClass]`, `v-bind:class`, `ng-class`, and utility calls (`cn`, `clsx`, `classNames`), building a reverse map of `className -> usage locations`.
+- **Live usage updates** — file watchers automatically update the usage index when templates are created, modified, or deleted.
+- **CSS language activation** — extension now activates on `css`, `scss`, `sass`, and `less` files.
+
+### Fixed
+- `extensionDevelopmentPath` in test runner was resolving to the wrong directory, causing the VS Code test instance to fail loading.
+
 ## [0.0.4] - 2026-05-23
 
 ### Added

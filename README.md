@@ -46,7 +46,7 @@ No more switching between files, no more "where did I define this style?", no mo
 | **Workspace-wide Indexing** | Scans your entire workspace for `.css`, `.scss`, `.sass`, `.less`, and inline `<style>` blocks in `.vue`, `.svelte`, `.astro`, `.html`, `.jsx`, `.tsx`. |
 | **Clickable References** | Every found definition includes a clickable link to its file and line number, opening in a **new tab** for quick navigation. |
 | **Edit in Place** | Click **Edit** next to any CSS rule to open the source file with the rule **auto-selected** — modify and save directly. |
-| **Live Updates** | File watchers keep the CSS index updated automatically as you add, modify, or delete styles. |
+| **Reverse Class Lookup** | Hover over any `.className` in a CSS/SCSS file to see exactly where that class is used across your entire workspace — with clickable links to each template. |
 
 ---
 
