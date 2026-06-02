@@ -22,9 +22,12 @@ export async function run(): Promise<void> {
                 } else {
                     resolve();
                 }
+                process.exit(failures ? 1 : 0);
             });
         } catch (err) {
+            console.error(err);
             reject(err);
+            process.exit(1);
         }
     });
 }
