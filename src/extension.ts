@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { CssIndexer } from './cssIndexer';
 import { CssHoverProvider } from './hoverProvider';
+import { CssUsageHoverProvider } from './cssUsageHoverProvider';
 
 export function activate(context: vscode.ExtensionContext) {
     const indexer = new CssIndexer();
@@ -27,6 +28,22 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.languages.registerHoverProvider(selector, hoverProvider)
+    );
+
+    // Reverse lookup: hover in CSS files to see where classes are used
+    const cssSelector: vscode.DocumentSelector = [
+        { scheme: 'file', language: 'css' },
+        { scheme: 'file', language: 'scss' },
+        { scheme: 'file', language: 'sass' },
+        { scheme: 'file', language: 'less' },
+        { scheme: 'untitled', language: 'css' },
+        { scheme: 'untitled', language: 'scss' },
+        { scheme: 'untitled', language: 'sass' },
+        { scheme: 'untitled', language: 'less' },
+    ];
+    const cssUsageProvider = new CssUsageHoverProvider(indexer);
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider(cssSelector, cssUsageProvider)
     );
 
     context.subscriptions.push(

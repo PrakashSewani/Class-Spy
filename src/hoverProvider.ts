@@ -73,7 +73,7 @@ export class CssHoverProvider implements vscode.HoverProvider {
                 const locationBadge = isCurrent ? 'current file' : fileName;
 
                 const openArgs = encodeURIComponent(JSON.stringify([def.uri, def.line]));
-                const openLink = `[Open ${fileName}:${def.line + 1}](command:classSpy.openFile?${openArgs})`;
+                const openLink = `[Open](command:classSpy.openFile?${openArgs})`;
                 const editArgs = encodeURIComponent(JSON.stringify([
                     def.uri,
                     def.startLine, def.startChar,
@@ -86,9 +86,8 @@ export class CssHoverProvider implements vscode.HoverProvider {
                 }
 
                 contents.appendMarkdown(`**Selector:** \`${def.selector}\`  \n`);
-                contents.appendMarkdown(`*${locationBadge}*  \n\n`);
+                contents.appendMarkdown(`*${locationBadge}* &nbsp; ${openLink} &bull; ${editLink}  \n\n`);
                 contents.appendCodeblock(def.text, 'css');
-                contents.appendMarkdown(`\n${openLink} &nbsp;&bull;&nbsp; ${editLink}`);
             }
         }
 

@@ -15,9 +15,16 @@ export interface CssDefinition {
     text: string;
 }
 
+export interface ClassUsage {
+    uri: string;
+    line: number;
+    lineText: string;
+}
+
 export class CssIndexer {
     private index = new Map<string, CssDefinition[]>();
     private watchers: vscode.FileSystemWatcher[] = [];
+    private templateFiles: vscode.Uri[] = [];
 
     activate(context: vscode.ExtensionContext) {
         this.refresh();
@@ -39,13 +46,44 @@ export class CssIndexer {
 
     async refresh() {
         this.index.clear();
+        this.templateFiles = [];
         const cssFiles = await vscode.workspace.findFiles('**/*.{css,scss,sass,less}', '**/node_modules/**');
         const tplFiles = await vscode.workspace.findFiles('**/*.{html,htm,vue,svelte,astro,jsx,tsx}', '**/node_modules/**');
+        this.templateFiles = tplFiles;
 
         const allFiles = [...cssFiles, ...tplFiles];
         for (const uri of allFiles) {
             await this.parseFile(uri);
         }
+    }
+
+    /**
+     * Find all usages of a CSS class name across template/JSX files.
+     */
+    async findUsages(className: string): Promise<ClassUsage[]> {
+        const usages: ClassUsage[] = [];
+        const escaped = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const classRegex = new RegExp(`\\b${escaped}\\b`);
+
+        for (const uri of this.templateFiles) {
+            try {
+                const doc = await vscode.workspace.openTextDocument(uri);
+                const text = doc.getText();
+                const lines = text.split('\n');
+                for (let i = 0; i < lines.length; i++) {
+                    if (classRegex.test(lines[i])) {
+                        usages.push({
+                            uri: uri.toString(),
+                            line: i,
+                            lineText: lines[i].trim()
+                        });
+                    }
+                }
+            } catch {
+                // ignore files that can't be opened
+            }
+        }
+        return usages;
     }
 
     getDefinitions(className: string): CssDefinition[] {
@@ -64,6 +102,11 @@ export class CssIndexer {
             if (!isTemplate) {
                 this.processCssText(text, uri.toString(), ext, 0);
             } else {
+                // Track template file for reverse lookup
+                const uriStr = uri.toString();
+                if (!this.templateFiles.some(f => f.toString() === uriStr)) {
+                    this.templateFiles.push(uri);
+                }
                 const styleRegex = /<style\b[^>]*>([\s\S]*?)<\/style>/gi;
                 let match: RegExpExecArray | null;
                 while ((match = styleRegex.exec(text)) !== null) {
@@ -87,6 +130,7 @@ export class CssIndexer {
 
     private removeFile(uri: vscode.Uri) {
         const key = uri.toString();
+        this.templateFiles = this.templateFiles.filter(f => f.toString() !== key);
         for (const [className, defs] of this.index.entries()) {
             const filtered = defs.filter(d => d.uri !== key);
             if (filtered.length === 0) {
