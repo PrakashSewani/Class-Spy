@@ -2,6 +2,14 @@
 
 All notable changes to the "Class Spy" extension will be documented in this file.
 
+## [1.0.0] - 2026-06-28
+
+### Added
+- **Reverse lookup (CSS → Usage)** — hover over a class selector in `.css`, `.scss`, `.sass`, or `.less` files to see all template/JSX files that use that class, with clickable links to jump to each usage.
+
+### Changed
+- **Inline Edit button** — Edit link now appears next to the file name and Open link in hover popups, instead of at the bottom of the definition block.
+
 ## [0.0.4] - 2026-05-23
 
 ### Added
